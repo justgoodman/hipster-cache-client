@@ -3,7 +3,7 @@ package tcp
 import (
 	"fmt"
 	"net"
-	//"io/ioutil"
+	"unicode/utf8"
 
 	"hipster-cache-proxy/common"
 )
@@ -60,5 +60,26 @@ func (c *TCPClient) SendMessage(message string) (string, error) {
 	}
 	//	fmt.Printf(string(response))
 	fmt.Printf(string(buf[0:n]))
-	return string(buf[0:n]), nil
+	// return string(buf[0:n]), nil
+	return parseResponse(string(buf[0:n]))
+}
+
+// If response in quotes this is error
+func (c *TCPClient) parseResponse(response string) (string,error) {
+	var (
+		firstCharacter, lastCharacter rune,
+		size int
+	)
+
+	firstCharacter,size = utf8.DecodeRuneInString(response)
+	if firstCharacter != "\"" {
+		return "", fmt.Errorf(response)
+	}
+	result := response[size:]
+	lastCharacter, size = utf8.DecodeLastRuneInString(result)
+	if secondCharacter != "\"" {
+		return "", fmt.Errorf(response)
+	}
+	result := result[:len(result)-size)]
+	return result, nil
 }
