@@ -1,4 +1,4 @@
-package client
+package hipsterCacheClient
 
 import (
 	"sync"
@@ -11,17 +11,18 @@ import (
 )
 
 type HipsterCacheClient struct {
-	clientPort int
+	clientPortForServer int
+
 	logger common.ILogger
 	proxyClient *tcp.ProxyClient
 	serversClient map[string]*tcp.TCPClient
 	serversClientMutex sync.RWMutex
 }
 
-func NewHipsterCacheClient(proxyServerAddress string,proxyServerPort,clientPort int,logger common.ILogger) *HipsterCacheClient {
+func NewHipsterCacheClient(proxyServerAddress string,proxyServerPort,clientPortForProxy,clientPortForServer int,logger common.ILogger) *HipsterCacheClient {
 	return &HipsterCacheClient{
-		proxyClient: tcp.NewProxyClient(clientPort, proxyServerAddress, proxyServerPort, logger),
-		clientPort: clientPort,
+		proxyClient: tcp.NewProxyClient(clientPortForProxy, proxyServerAddress, proxyServerPort, logger),
+		clientPortForServer: clientPortForServer,
 		logger: logger,
 		serversClient: make(map[string]*tcp.TCPClient),
 	}
@@ -95,25 +96,34 @@ func (c *HipsterCacheClient) DGetAll(key string) ([]string, error) {
 	return strings.Split(result,"\n"), err
 }
 
-func (c *HipsterCacheClient) getServerClient(cacheServerAddress string, cacheServerPort int) *tcp.TCPClient {
+func (c *HipsterCacheClient) getServerClient(cacheServerAddress string, cacheServerPort int) (*tcp.TCPClient, error) {
 	cacheServerKey := fmt.Sprintf("%s:%d", cacheServerAddress,cacheServerPort)
 	c.serversClientMutex.RLock()
 	cacheServerClient, ok := c.serversClient[cacheServerKey]
 	c.serversClientMutex.RUnlock()
 	if !ok {
 		c.serversClientMutex.Lock()
-		cacheServerClient = tcp.NewTCPClient(c.clientPort, cacheServerAddress, cacheServerPort, c.logger)
+		cacheServerClient = tcp.NewTCPClient(c.clientPortForServer, cacheServerAddress, cacheServerPort, c.logger)
 		c.serversClient[cacheServerKey] = cacheServerClient
 		c.serversClientMutex.Unlock()
-		cacheServerClient.InitConnection()
+		if err := cacheServerClient.InitConnection(); err != nil {
+			return nil, err
+		}
 	}
-	return cacheServerClient
+	return cacheServerClient, nil
 }
 func (c *HipsterCacheClient) sendCommand(key string,command string) (string,error) {
+	var (
+	    cacheServerClient *tcp.TCPClient
+	)
 	cacheServerAddress, cacheServerPort, err := c.proxyClient.GetShardAddress(key)
 	if err != nil {
 		return "",err
 	}
-	cacheServerClient := c.getServerClient(cacheServerAddress,cacheServerPort)
+	cacheServerClient, err = c.getServerClient(cacheServerAddress,cacheServerPort)
+	if err != nil {
+		return "",err
+	}
+	fmt.Printf("\n CacheServerClient: %#v", cacheServerClient)
 	return cacheServerClient.SendMessage(command)
 }

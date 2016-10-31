@@ -41,22 +41,24 @@ func (c *TCPClient) SendMessage(message string) (string, error) {
 	c.sendMessageMutex.Lock()
 	defer c.sendMessageMutex.Unlock()
 	var buf [512]byte
+	fmt.Println("1111")
 	_, err := c.conn.Write([]byte(message))
+	fmt.Println("2222")
 	if err != nil {
 		c.logger.Errorf(`Error send message "%s", error "%s"`, message, err.Error())
-		c.conn.Close()
-		c.InitConnection()
+	//	c.conn.Close()
+	//	c.InitConnection()
 		return "", err
 	}
 
+	fmt.Println("3333")
 	n, err := c.conn.Read(buf[0:])
 	if err != nil {
-		c.logger.Errorf(`Read message error: "%s"`, err.Error())
-		c.conn.Close()
-		c.InitConnection()
+//		c.logger.Errorf(`Read message error: "%s"`, err.Error())
+//		c.conn.Close()
+//		c.InitConnection()
 	}
-
-	fmt.Println(string(buf[0:n]))
+	fmt.Println("4444")
 	//	response, err := ioutil.ReadAll(c.conn)
 /*
 	if err != nil {
