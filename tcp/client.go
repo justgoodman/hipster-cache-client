@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net"
 	"unicode/utf8"
+	"sync"
 
-	"hipster-cache-proxy/common"
+	"hipster-cache-client/common"
 )
 
 type TCPClient struct {
@@ -14,9 +15,10 @@ type TCPClient struct {
 	clientPort    int
 	logger        common.ILogger
 	conn          *net.TCPConn
+	sendMessageMutex sync.Mutex
 }
 
-func NewTCPClient(clientPort int, serverAddress string, serverPort int, logger common.ILogger) *ProxyClient {
+func NewTCPClient(clientPort int, serverAddress string, serverPort int, logger common.ILogger) *TCPClient {
 	return &TCPClient{clientPort: clientPort, serverAddress: serverAddress, serverPort: serverPort, logger: logger}
 }
 
@@ -36,6 +38,8 @@ func (c *TCPClient) InitConnection() error {
 }
 
 func (c *TCPClient) SendMessage(message string) (string, error) {
+	c.sendMessageMutex.Lock()
+	defer c.sendMessageMutex.Unlock()
 	var buf [512]byte
 	_, err := c.conn.Write([]byte(message))
 	if err != nil {
@@ -54,32 +58,34 @@ func (c *TCPClient) SendMessage(message string) (string, error) {
 
 	fmt.Println(string(buf[0:n]))
 	//	response, err := ioutil.ReadAll(c.conn)
+/*
 	if err != nil {
 		c.logger.Errorf(`Error response for message "%s", error "%s"`, message, err.Error())
 		return "", err
 	}
+*/
 	//	fmt.Printf(string(response))
 	fmt.Printf(string(buf[0:n]))
 	// return string(buf[0:n]), nil
-	return parseResponse(string(buf[0:n]))
+	return c.parseResponse(string(buf[0:n]))
 }
 
 // If response in quotes this is error
 func (c *TCPClient) parseResponse(response string) (string,error) {
 	var (
-		firstCharacter, lastCharacter rune,
+		firstCharacter, lastCharacter rune
 		size int
 	)
 
 	firstCharacter,size = utf8.DecodeRuneInString(response)
-	if firstCharacter != "\"" {
+	if string(firstCharacter) != "\"" {
 		return "", fmt.Errorf(response)
 	}
 	result := response[size:]
 	lastCharacter, size = utf8.DecodeLastRuneInString(result)
-	if secondCharacter != "\"" {
+	if string(lastCharacter) != "\"" {
 		return "", fmt.Errorf(response)
 	}
-	result := result[:len(result)-size)]
+	result = result[:(len(result)-size)]
 	return result, nil
 }
