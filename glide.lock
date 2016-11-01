@@ -1,0 +1,22 @@
+hash: ab7589dd0fab76fd565fc353e0f5045b93fe585bd920185eae0cd23b1959f1ce
+updated: 2016-11-01T08:50:38.970557029+03:00
+imports:
+- name: github.com/juju/ansiterm
+  version: b99631de12cf04a906c1d4e4ec54fb86eae5863d
+  subpackages:
+  - tabwriter
+- name: github.com/juju/loggo
+  version: 3b7ece48644d35850f4ced4c2cbc2cf8413f58e0
+- name: github.com/lunixbochs/vtclean
+  version: 4fbf7632a2c6d3fbdb9931439bdbbeded02cbe36
+- name: github.com/mattn/go-colorable
+  version: 6c903ff4aa50920ca86087a280590b36b3152b9c
+- name: github.com/mattn/go-isatty
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: golang.org/x/sys
+  version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
+  subpackages:
+  - unix
+testImports:
+- name: gopkg.in/check.v1
+  version: 64131543e7896d5bcc6bd5a76287eb75ea96c673

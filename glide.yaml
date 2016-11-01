@@ -1,0 +1,6 @@
+package: hipster-cache-client 
+import:
+- package: github.com/juju/loggo
+testImport:
+- package: gopkg.in/check.v1
+  version: 64131543e7896d5bcc6bd5a76287eb75ea96c673
