@@ -13,4 +13,3 @@ func RandString(n int) string {
 	}
 	return string(b)
 }
-

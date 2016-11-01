@@ -1,12 +1,12 @@
 package test
 
-import(
-	"os"
+import (
 	"fmt"
+	"os"
 	"strconv"
 
-	"hipster-cache-client/common"
 	"hipster-cache-client"
+	"hipster-cache-client/common"
 
 	"github.com/juju/loggo"
 )
@@ -16,7 +16,7 @@ type clientDSL struct {
 }
 
 func NewClientDSL() *clientDSL {
-	return &clientDSL{logger: loggo.GetLogger(""),}
+	return &clientDSL{logger: loggo.GetLogger("")}
 }
 
 func (dsl *clientDSL) WithLogger(logger common.ILogger) *clientDSL {
@@ -39,8 +39,7 @@ func (dsl *clientDSL) Do() *hipsterCacheClient.HipsterCacheClient {
 		panic(fmt.Sprintf(`PROXY_PORT is not the int type`))
 	}
 
-
-	client := hipsterCacheClient.NewHipsterCacheClient(proxyServerAddress,proxyServerPort,dsl.logger)
+	client := hipsterCacheClient.NewHipsterCacheClient(proxyServerAddress, proxyServerPort, dsl.logger)
 
 	err = client.Init()
 

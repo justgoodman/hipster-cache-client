@@ -3,17 +3,17 @@ package tcp
 import (
 	"fmt"
 	"net"
-	"unicode/utf8"
 	"sync"
+	"unicode/utf8"
 
 	"hipster-cache-client/common"
 )
 
 type TCPClient struct {
-	serverAddress string
-	serverPort    int
-	logger        common.ILogger
-	conn          net.Conn
+	serverAddress    string
+	serverPort       int
+	logger           common.ILogger
+	conn             net.Conn
 	sendMessageMutex sync.Mutex
 }
 
@@ -22,17 +22,17 @@ func NewTCPClient(serverAddress string, serverPort int, logger common.ILogger) *
 }
 
 func (c *TCPClient) InitConnection() error {
-/*
-	serverTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
-	if err != nil {
-		return err
-	}
+	/*
+		serverTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
+		if err != nil {
+			return err
+		}
 
-	localTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", c.clientPort))
-*/
+		localTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", c.clientPort))
+	*/
 	var err error
 	c.conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
-//	c.conn, err net.DialTCP("tcp", localTCPAddr,serverTCPAddr)
+	//	c.conn, err net.DialTCP("tcp", localTCPAddr,serverTCPAddr)
 	if err != nil {
 		return err
 	}
@@ -63,25 +63,24 @@ func (c *TCPClient) SendMessage(message string) (string, error) {
 }
 
 // If response doesn't include quotes this is error
-func (c *TCPClient) parseResponse(response string) (string,error) {
+func (c *TCPClient) parseResponse(response string) (string, error) {
 	var (
 		firstCharacter, lastCharacter rune
-		size int
+		size                          int
 	)
 	// Remove \n -> lastCharacter
 	lastCharacter, size = utf8.DecodeLastRuneInString(response)
 	if string(lastCharacter) != "\n" {
-		return "", fmt.Errorf("Last Character in not \\n %s",response)
+		return "", fmt.Errorf("Last Character in not \\n %s", response)
 	}
 
-	response = response[:(len(response)-size)]
-
+	response = response[:(len(response) - size)]
 
 	if response == "OK" {
-		return "",nil
+		return "", nil
 	}
 
-	firstCharacter,size = utf8.DecodeRuneInString(response)
+	firstCharacter, size = utf8.DecodeRuneInString(response)
 	if string(firstCharacter) != "\"" {
 		fmt.Printf("Error FirstCharacted `%s` in string `%s`", string(firstCharacter), response)
 		return "", fmt.Errorf(response)
@@ -92,6 +91,6 @@ func (c *TCPClient) parseResponse(response string) (string,error) {
 		fmt.Printf("Error LastCharacted `%s` in string `%s`", string(lastCharacter), response)
 		return "", fmt.Errorf(response)
 	}
-	result = result[:(len(result)-size)]
+	result = result[:(len(result) - size)]
 	return result, nil
 }

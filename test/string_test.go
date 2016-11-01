@@ -16,7 +16,7 @@ func TestStart(t *testing.T) {
 func (suite *StringTestSuite) TestSetExpectNotError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.Set("test","value")
+	err := client.Set("test", "value")
 
 	c.Assert(err, IsNil)
 }
@@ -24,7 +24,7 @@ func (suite *StringTestSuite) TestSetExpectNotError(c *C) {
 func (suite *StringTestSuite) TestSetEmptyKeyExpectError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.Set("","value")
+	err := client.Set("", "value")
 
 	c.Assert(err, NotNil)
 }
@@ -41,7 +41,7 @@ func (suite *StringTestSuite) TestGetExpectObservedValue(c *C) {
 	key := "some_key"
 	value := "some_value"
 	client := NewClientDSL().Do()
-	client.Set(key,value)
+	client.Set(key, value)
 
 	retValue, err := client.Get(key)
 

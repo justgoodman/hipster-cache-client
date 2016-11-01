@@ -11,7 +11,7 @@ var _ = Suite(&DictTestSuite{})
 func (suite *DictTestSuite) TestDSetExpectNotError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.DSet("testDictKey","field","value")
+	err := client.DSet("testDictKey", "field", "value")
 
 	c.Assert(err, IsNil)
 }
@@ -19,16 +19,15 @@ func (suite *DictTestSuite) TestDSetExpectNotError(c *C) {
 func (suite *DictTestSuite) TestDSetEmptyFielValueError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.DSet("testDictKey","","")
+	err := client.DSet("testDictKey", "", "")
 
-	c.Assert(err,NotNil)
+	c.Assert(err, NotNil)
 }
-
 
 func (suite *DictTestSuite) TestDSetEmptyKeyExpectError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.DSet("","field", "value")
+	err := client.DSet("", "field", "value")
 
 	c.Assert(err, NotNil)
 }
@@ -36,7 +35,7 @@ func (suite *DictTestSuite) TestDSetEmptyKeyExpectError(c *C) {
 func (suite *DictTestSuite) TestDSetMoreThanMaxLenExpectError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.DSet(RandString(256),"field", "value")
+	err := client.DSet(RandString(256), "field", "value")
 
 	c.Assert(err, NotNil)
 
@@ -47,11 +46,10 @@ func (suite *DictTestSuite) TestDGetExpectObservedValue(c *C) {
 	field := "field"
 	value := "value"
 	client := NewClientDSL().Do()
-	client.DSet(key,field,value)
+	client.DSet(key, field, value)
 
-	retValue , err := client.DGet(key,field)
+	retValue, err := client.DGet(key, field)
 
 	c.Assert(err, IsNil)
 	c.Assert(retValue, Equals, value)
 }
-

@@ -11,7 +11,7 @@ var _ = Suite(&ListTestSuite{})
 func (suite *ListTestSuite) TestLPushExpectNotError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.LPush("testLPushKey","value")
+	err := client.LPush("testLPushKey", "value")
 
 	c.Assert(err, IsNil)
 }
@@ -19,7 +19,7 @@ func (suite *ListTestSuite) TestLPushExpectNotError(c *C) {
 func (suite *ListTestSuite) TestLPushEmptyKeyExpectError(c *C) {
 	client := NewClientDSL().Do()
 
-	err := client.LPush("","value")
+	err := client.LPush("", "value")
 
 	c.Assert(err, NotNil)
 }
@@ -49,14 +49,14 @@ func (suite *ListTestSuite) TestLRangeExpectObservedValues(c *C) {
 	value1 := RandString(10)
 	value2 := RandString(10)
 	client := NewClientDSL().Do()
-	startIndex,_ := client.LLen(key)
+	startIndex, _ := client.LLen(key)
 	client.LPush(key, value1)
 	client.LPush(key, value2)
 
-	values, err := client.LRange(key, startIndex, startIndex + 2)
+	values, err := client.LRange(key, startIndex, startIndex+2)
 
 	c.Assert(err, IsNil)
-	c.Assert(values, DeepEquals, []string{value1,value2})
+	c.Assert(values, DeepEquals, []string{value1, value2})
 }
 
 func (suite *ListTestSuite) TestLSetExpectObservedValue(c *C) {
@@ -65,13 +65,13 @@ func (suite *ListTestSuite) TestLSetExpectObservedValue(c *C) {
 	valueSet := RandString(10)
 	client := NewClientDSL().Do()
 	client.LPush(key, valuePush)
-	index,_ := client.LLen(key)
+	index, _ := client.LLen(key)
 
 	err := client.LSet(key, index-1, valueSet)
 
 	c.Assert(err, IsNil)
 
-	value, _  := client.LRange(key, index-1, index-1)
+	value, _ := client.LRange(key, index-1, index-1)
 
 	c.Assert(value, DeepEquals, []string{valueSet})
 }
