@@ -5,24 +5,23 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
+	"unicode/utf8"
 
 	"hipster-cache-client/tcp"
 	"hipster-cache-client/common"
 )
 
 type HipsterCacheClient struct {
-	clientPortForServer int
-
 	logger common.ILogger
 	proxyClient *tcp.ProxyClient
 	serversClient map[string]*tcp.TCPClient
 	serversClientMutex sync.RWMutex
 }
 
-func NewHipsterCacheClient(proxyServerAddress string,proxyServerPort,clientPortForProxy,clientPortForServer int,logger common.ILogger) *HipsterCacheClient {
+
+func NewHipsterCacheClient(proxyServerAddress string,proxyServerPort int,logger common.ILogger) *HipsterCacheClient {
 	return &HipsterCacheClient{
-		proxyClient: tcp.NewProxyClient(clientPortForProxy, proxyServerAddress, proxyServerPort, logger),
-		clientPortForServer: clientPortForServer,
+		proxyClient: tcp.NewProxyClient(proxyServerAddress, proxyServerPort, logger),
 		logger: logger,
 		serversClient: make(map[string]*tcp.TCPClient),
 	}
@@ -56,9 +55,32 @@ func (c *HipsterCacheClient) LSet(key string, index int, value string) error {
 }
 
 func (c *HipsterCacheClient) LRange(key string, indexStart,indexEnd int) ([]string,error) {
+	var (
+		size int
+	)
+
 	command := fmt.Sprintf("LRANGE %s %d %d", key, indexStart, indexEnd)
 	result, err := c.sendCommand(key,command)
-	return strings.Split(result,"\n"), err
+	if err != nil {
+		return []string{}, err
+	}
+
+	// Remove quotes
+	values := strings.Split(result,"\n")
+	lenValues := len(values)
+	res := make([]string,lenValues,lenValues)
+	for i,value := range values {
+		if i != lenValues - 1 {
+			_, size = utf8.DecodeLastRuneInString(value)
+			value = value[:(len(value)-size)]
+		}
+		if i != 0 {
+			_,size = utf8.DecodeRuneInString(value)
+			value = value[size:]
+		}
+		res[i] = value
+	}
+	return res, err
 }
 
 func (c *HipsterCacheClient) LLen(key string) (int,error) {
@@ -89,12 +111,13 @@ func (c *HipsterCacheClient) DGet(key, field string) (string,error) {
 	command := fmt.Sprintf("DGET %s %s", key, field)
 	return c.sendCommand(key, command)
 }
-
+/*
 func (c *HipsterCacheClient) DGetAll(key string) ([]string, error) {
 	command := fmt.Sprintf("DGETALL %s", key)
 	result,err := c.sendCommand(key, command)
 	return strings.Split(result,"\n"), err
 }
+*/
 
 func (c *HipsterCacheClient) getServerClient(cacheServerAddress string, cacheServerPort int) (*tcp.TCPClient, error) {
 	cacheServerKey := fmt.Sprintf("%s:%d", cacheServerAddress,cacheServerPort)
@@ -103,7 +126,7 @@ func (c *HipsterCacheClient) getServerClient(cacheServerAddress string, cacheSer
 	c.serversClientMutex.RUnlock()
 	if !ok {
 		c.serversClientMutex.Lock()
-		cacheServerClient = tcp.NewTCPClient(c.clientPortForServer, cacheServerAddress, cacheServerPort, c.logger)
+		cacheServerClient = tcp.NewTCPClient(cacheServerAddress, cacheServerPort, c.logger)
 		c.serversClient[cacheServerKey] = cacheServerClient
 		c.serversClientMutex.Unlock()
 		if err := cacheServerClient.InitConnection(); err != nil {

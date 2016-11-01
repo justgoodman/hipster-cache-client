@@ -12,8 +12,8 @@ type ProxyClient struct {
 	tcpClient *TCPClient
 }
 
-func NewProxyClient(clientPort int, serverAddress string, serverPort int, logger common.ILogger) *ProxyClient {
-	tcpClient := &TCPClient{clientPort: clientPort, serverAddress: serverAddress, serverPort: serverPort, logger: logger}
+func NewProxyClient(serverAddress string, serverPort int, logger common.ILogger) *ProxyClient {
+	tcpClient := &TCPClient{serverAddress: serverAddress, serverPort: serverPort, logger: logger}
 	return &ProxyClient{tcpClient: tcpClient}
 }
 
