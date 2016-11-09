@@ -22,33 +22,35 @@ func NewTCPClient(serverAddress string, serverPort int, logger common.ILogger) *
 }
 
 func (c *TCPClient) InitConnection() error {
-	/*
-		serverTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
-		if err != nil {
-			return err
-		}
-
-		localTCPAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", c.clientPort))
-	*/
 	var err error
-	c.conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
-	//	c.conn, err net.DialTCP("tcp", localTCPAddr,serverTCPAddr)
-	if err != nil {
-		return err
+	for i := 0; i < 10; i++ {
+		c.conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", c.serverAddress, c.serverPort))
+		if err != nil {
+			fmt.Printf("Error connection try %d error %s", i+1, err.Error())
+		} else {
+			break
+		}
 	}
-	return nil
+	return err
 }
 
 func (c *TCPClient) SendMessage(message string) (string, error) {
+	var err error
 	fmt.Printf("\n Send Message : %s", message)
 	c.sendMessageMutex.Lock()
 	defer c.sendMessageMutex.Unlock()
 	var buf [512]byte
-	_, err := c.conn.Write([]byte(message))
+	if c.conn == nil {
+		fmt.Printf("Error conn is nill")
+		err = c.InitConnection()
+		if err != nil {
+			return "", err
+		}
+	}
+	_, err = c.conn.Write([]byte(message))
 	if err != nil {
 		c.logger.Errorf(`Error send message "%s", error "%s"`, message, err.Error())
 		c.conn.Close()
-		c.InitConnection()
 		return "", err
 	}
 
@@ -56,7 +58,6 @@ func (c *TCPClient) SendMessage(message string) (string, error) {
 	if err != nil {
 		c.logger.Errorf(`Read message error: "%s"`, err.Error())
 		c.conn.Close()
-		c.InitConnection()
 	}
 	fmt.Printf(string(buf[0:n]))
 	return c.parseResponse(string(buf[0:n]))
